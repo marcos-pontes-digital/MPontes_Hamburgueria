@@ -1,0 +1,544 @@
+package br.com.mpontes.hamburgueria.view;
+
+import br.com.mpontes.hamburgueria.dao.ItemPedidoDAO;
+import br.com.mpontes.hamburgueria.dao.PedidoDAO;
+import br.com.mpontes.hamburgueria.dao.ProdutoDAO;
+import br.com.mpontes.hamburgueria.model.ItemPedido;
+import br.com.mpontes.hamburgueria.model.Pedido;
+import br.com.mpontes.hamburgueria.model.Produto;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+public class TelaPedidos extends JFrame {
+
+    private JComboBox<Produto> comboProdutos;
+    private JSpinner spinnerQuantidade;
+    private JTextField txtCliente;
+    private JComboBox<String> comboTipo;
+
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    private JLabel lblTotal;
+
+    private double total = 0.0;
+
+    public TelaPedidos() {
+
+        setTitle("MPontes Hamburgueria - Novo Pedido");
+        setSize(950, 650);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        criarInterface();
+        carregarProdutos();
+    }
+
+    private void criarInterface() {
+
+        JPanel painelPrincipal = new JPanel(
+                new BorderLayout(10, 10)
+        );
+
+        painelPrincipal.setBorder(
+                BorderFactory.createEmptyBorder(
+                        15, 15, 15, 15
+                )
+        );
+
+        JLabel titulo = new JLabel(
+                "MPontes Hamburgueria - NOVO PEDIDO",
+                SwingConstants.CENTER
+        );
+
+        titulo.setFont(
+                new Font("Arial", Font.BOLD, 24)
+        );
+
+        painelPrincipal.add(
+                titulo,
+                BorderLayout.NORTH
+        );
+
+        JPanel painelDados = new JPanel(
+                new GridLayout(2, 4, 10, 10)
+        );
+
+        painelDados.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Dados do Pedido"
+                )
+        );
+
+        painelDados.add(
+                new JLabel("Cliente:")
+        );
+
+        txtCliente = new JTextField();
+
+        painelDados.add(txtCliente);
+
+        painelDados.add(
+                new JLabel("Tipo:")
+        );
+
+        comboTipo = new JComboBox<>(
+                new String[]{
+                        "BALCÃO",
+                        "MESA",
+                        "DELIVERY"
+                }
+        );
+
+        painelDados.add(comboTipo);
+
+        painelDados.add(
+                new JLabel("Produto:")
+        );
+
+        comboProdutos = new JComboBox<>();
+
+        painelDados.add(comboProdutos);
+
+        painelDados.add(
+                new JLabel("Quantidade:")
+        );
+
+        JPanel painelQuantidade = new JPanel(
+                new BorderLayout(5, 5)
+        );
+
+        spinnerQuantidade = new JSpinner(
+                new SpinnerNumberModel(
+                        1,
+                        1,
+                        99,
+                        1
+                )
+        );
+
+        JButton btnAdicionar = new JButton(
+                "Adicionar"
+        );
+
+        btnAdicionar.addActionListener(
+                e -> adicionarProduto()
+        );
+
+        painelQuantidade.add(
+                spinnerQuantidade,
+                BorderLayout.CENTER
+        );
+
+        painelQuantidade.add(
+                btnAdicionar,
+                BorderLayout.EAST
+        );
+
+        painelDados.add(painelQuantidade);
+
+        painelPrincipal.add(
+                painelDados,
+                BorderLayout.CENTER
+        );
+
+        modeloTabela = new DefaultTableModel(
+                new Object[]{
+                        "Produto",
+                        "Quantidade",
+                        "Preço Unitário",
+                        "Subtotal"
+                },
+                0
+        ) {
+            @Override
+            public boolean isCellEditable(
+                    int row,
+                    int column
+            ) {
+                return false;
+            }
+        };
+
+        tabela = new JTable(modeloTabela);
+
+        tabela.setRowHeight(28);
+
+        JScrollPane scroll = new JScrollPane(tabela);
+
+        scroll.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Itens do Pedido"
+                )
+        );
+
+        painelPrincipal.add(
+                scroll,
+                BorderLayout.SOUTH
+        );
+
+        lblTotal = new JLabel(
+                "TOTAL: R$ 0,00"
+        );
+
+        lblTotal.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        22
+                )
+        );
+
+        JPanel painelRodape = new JPanel(
+                new BorderLayout()
+        );
+
+        painelRodape.add(
+                lblTotal,
+                BorderLayout.WEST
+        );
+
+        JPanel painelBotoes = new JPanel();
+
+        JButton btnLimpar = new JButton(
+                "Limpar"
+        );
+
+        btnLimpar.addActionListener(
+                e -> limparPedido()
+        );
+
+        JButton btnFinalizar = new JButton(
+                "Finalizar Pedido"
+        );
+
+        btnFinalizar.addActionListener(
+                e -> finalizarPedido()
+        );
+
+        painelBotoes.add(btnLimpar);
+        painelBotoes.add(btnFinalizar);
+
+        painelRodape.add(
+                painelBotoes,
+                BorderLayout.EAST
+        );
+
+        painelPrincipal.add(
+                painelRodape,
+                BorderLayout.SOUTH
+        );
+
+        setContentPane(painelPrincipal);
+    }
+
+    private void carregarProdutos() {
+
+        ProdutoDAO dao = new ProdutoDAO();
+
+        List<Produto> produtos = dao.listar();
+
+        comboProdutos.removeAllItems();
+
+        for (Produto produto : produtos) {
+
+            if (produto.isAtivo()) {
+                comboProdutos.addItem(produto);
+            }
+        }
+
+        comboProdutos.setRenderer(
+                new DefaultListCellRenderer() {
+
+                    @Override
+                    public Component getListCellRendererComponent(
+                            JList<?> list,
+                            Object value,
+                            int index,
+                            boolean isSelected,
+                            boolean cellHasFocus
+                    ) {
+
+                        super.getListCellRendererComponent(
+                                list,
+                                value,
+                                index,
+                                isSelected,
+                                cellHasFocus
+                        );
+
+                        if (value instanceof Produto produto) {
+
+                            setText(
+                                    produto.getNome()
+                                    + " - R$ "
+                                    + String.format(
+                                            "%.2f",
+                                            produto.getPreco()
+                                    )
+                            );
+                        }
+
+                        return this;
+                    }
+                }
+        );
+    }
+
+    private void adicionarProduto() {
+
+    Produto produto =
+            (Produto) comboProdutos.getSelectedItem();
+
+    if (produto == null) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Selecione um produto."
+        );
+
+        return;
+    }
+
+    int quantidade =
+            (Integer) spinnerQuantidade.getValue();
+
+    double subtotal =
+            quantidade * produto.getPreco();
+
+
+        modeloTabela.addRow(
+                new Object[]{
+                        produto.getNome(),
+                        quantidade,
+                        String.format(
+                                "R$ %.2f",
+                                produto.getPreco()
+                        ),
+                        String.format(
+                                "R$ %.2f",
+                                subtotal
+                        )
+                }
+        );
+
+        total += subtotal;
+
+        atualizarTotal();
+    }
+
+    private void atualizarTotal() {
+
+        lblTotal.setText(
+                String.format(
+                        "TOTAL: R$ %.2f",
+                        total
+                )
+        );
+    }
+
+    private void limparPedido() {
+
+        modeloTabela.setRowCount(0);
+
+        total = 0.0;
+
+        txtCliente.setText("");
+
+        spinnerQuantidade.setValue(1);
+
+        atualizarTotal();
+    }
+
+    private void finalizarPedido() {
+
+        if (modeloTabela.getRowCount() == 0) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Adicione pelo menos um produto ao pedido."
+            );
+
+            return;
+        }
+
+        String cliente =
+                txtCliente.getText().trim();
+
+        if (cliente.isEmpty()) {
+            cliente = "Consumidor";
+        }
+
+        String tipo =
+                comboTipo.getSelectedItem().toString();
+
+        int resposta = JOptionPane.showConfirmDialog(
+                this,
+                String.format(
+                        "Finalizar pedido?\n\n"
+                        + "Cliente: %s\n"
+                        + "Tipo: %s\n"
+                        + "Total: R$ %.2f",
+                        cliente,
+                        tipo,
+                        total
+                ),
+                "Confirmar Pedido",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (resposta != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+
+            DateTimeFormatter formato =
+                    DateTimeFormatter.ofPattern(
+                            "yyyy-MM-dd HH:mm:ss"
+                    );
+
+            String dataHora =
+                    LocalDateTime.now()
+                            .format(formato);
+
+            Pedido pedido = new Pedido(
+                    dataHora,
+                    cliente,
+                    tipo,
+                    "ABERTO",
+                    total
+            );
+
+            PedidoDAO pedidoDAO =
+                    new PedidoDAO();
+
+            int pedidoId =
+                    pedidoDAO.cadastrar(pedido);
+
+            if (pedidoId == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Erro ao gravar o pedido."
+                );
+
+                return;
+            }
+
+            ItemPedidoDAO itemDAO =
+                    new ItemPedidoDAO();
+
+            ProdutoDAO produtoDAO =
+                    new ProdutoDAO();
+
+            for (int i = 0;
+                 i < modeloTabela.getRowCount();
+                 i++) {
+
+                String nomeProduto =
+                        modeloTabela.getValueAt(
+                                i,
+                                0
+                        ).toString();
+
+                int quantidade =
+                        Integer.parseInt(
+                                modeloTabela.getValueAt(
+                                        i,
+                                        1
+                                ).toString()
+                        );
+
+                Produto produtoEncontrado =
+                        encontrarProduto(
+                                produtoDAO.listar(),
+                                nomeProduto
+                        );
+
+                if (produtoEncontrado == null) {
+
+                    throw new Exception(
+                            "Produto não encontrado: "
+                            + nomeProduto
+                    );
+                }
+
+                ItemPedido item =
+                        new ItemPedido(
+                                pedidoId,
+                                produtoEncontrado.getId(),
+                                quantidade,
+                                produtoEncontrado.getPreco()
+                        );
+
+                int itemId =
+                        itemDAO.cadastrar(item);
+
+                if (itemId == -1) {
+
+                    throw new Exception(
+                            "Erro ao gravar item: "
+                            + nomeProduto
+                    );
+                }
+            }
+
+            pedidoDAO.atualizarTotal(
+                    pedidoId,
+                    total
+            );
+
+            pedidoDAO.atualizarStatus(
+                    pedidoId,
+                    "FINALIZADO"
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Pedido finalizado com sucesso!\n\n"
+                    + "Número do pedido: "
+                    + pedidoId
+                    + "\n"
+                    + String.format(
+                            "Total: R$ %.2f",
+                            total
+                    )
+            );
+
+            limparPedido();
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Erro ao finalizar pedido:\n"
+                    + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE
+            );
+
+            e.printStackTrace();
+        }
+    }
+
+    private Produto encontrarProduto(
+            List<Produto> produtos,
+            String nome
+    ) {
+
+        for (Produto produto : produtos) {
+
+            if (produto.getNome().equals(nome)) {
+                return produto;
+            }
+        }
+
+        return null;
+    }
+}
