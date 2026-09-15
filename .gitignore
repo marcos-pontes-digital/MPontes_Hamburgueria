@@ -1,0 +1,66 @@
+# ==============================
+# Java
+# ==============================
+*.class
+*.log
+hs_err_pid*
+
+# ==============================
+# Maven
+# ==============================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# ==============================
+# IDE - IntelliJ IDEA
+# ==============================
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ==============================
+# IDE - Eclipse
+# ==============================
+.classpath
+.project
+.settings/
+
+# ==============================
+# VS Code
+# ==============================
+.vscode/
+
+# ==============================
+# NetBeans
+# ==============================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ==============================
+# Sistema operacional
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Arquivos temporários
+# ==============================
+*.tmp
+*.temp
+*~
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
