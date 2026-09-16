@@ -6,6 +6,7 @@ import br.com.mpontes.hamburgueria.dao.ProdutoDAO;
 import br.com.mpontes.hamburgueria.model.ItemPedido;
 import br.com.mpontes.hamburgueria.model.Pedido;
 import br.com.mpontes.hamburgueria.model.Produto;
+import br.com.mpontes.hamburgueria.service.ImpressoraComanda;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -292,25 +293,24 @@ public class TelaPedidos extends JFrame {
 
     private void adicionarProduto() {
 
-    Produto produto =
-            (Produto) comboProdutos.getSelectedItem();
+        Produto produto =
+                (Produto) comboProdutos.getSelectedItem();
 
-    if (produto == null) {
+        if (produto == null) {
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Selecione um produto."
-        );
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Selecione um produto."
+            );
 
-        return;
-    }
+            return;
+        }
 
-    int quantidade =
-            (Integer) spinnerQuantidade.getValue();
+        int quantidade =
+                (Integer) spinnerQuantidade.getValue();
 
-    double subtotal =
-            quantidade * produto.getPreco();
-
+        double subtotal =
+                quantidade * produto.getPreco();
 
         modeloTabela.addRow(
                 new Object[]{
@@ -437,6 +437,9 @@ public class TelaPedidos extends JFrame {
             ProdutoDAO produtoDAO =
                     new ProdutoDAO();
 
+            StringBuilder itensComanda =
+                    new StringBuilder();
+
             for (int i = 0;
                  i < modeloTabela.getRowCount();
                  i++) {
@@ -487,6 +490,19 @@ public class TelaPedidos extends JFrame {
                             + nomeProduto
                     );
                 }
+
+                double subtotalItem =
+                        quantidade *
+                        produtoEncontrado.getPreco();
+
+                itensComanda.append(
+                        String.format(
+                                "%dx %s - R$ %.2f\n",
+                                quantidade,
+                                nomeProduto,
+                                subtotalItem
+                        )
+                );
             }
 
             pedidoDAO.atualizarTotal(
@@ -498,6 +514,30 @@ public class TelaPedidos extends JFrame {
                     pedidoId,
                     "FINALIZADO"
             );
+
+            // Imprime a comanda na Epson TM-T88V
+            try {
+
+                ImpressoraComanda.imprimir(
+                        pedidoId,
+                        cliente,
+                        tipo,
+                        itensComanda.toString(),
+                        total
+                );
+
+            } catch (Exception erroImpressao) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Pedido finalizado, mas houve erro ao imprimir a comanda.\n\n"
+                        + erroImpressao.getMessage(),
+                        "Erro de Impressão",
+                        JOptionPane.WARNING_MESSAGE
+                );
+
+                erroImpressao.printStackTrace();
+            }
 
             JOptionPane.showMessageDialog(
                     this,
