@@ -1,12 +1,11 @@
 package br.com.mpontes.hamburgueria.service;
 
+import br.com.mpontes.hamburgueria.dao.ConfiguracaoDAO;
+
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ImpressoraComanda {
-
-    private static final String IMPRESSORA =
-            "EPSON_TM_T88V_USB";
 
     public static void imprimir(
             int pedidoId,
@@ -16,38 +15,31 @@ public class ImpressoraComanda {
             double total
     ) throws Exception {
 
+        ConfiguracaoDAO configuracaoDAO =
+                new ConfiguracaoDAO();
+
+        String impressora =
+                configuracaoDAO.buscar("impressora.cozinha");
+
+        if (impressora == null ||
+                impressora.isBlank()) {
+
+            throw new RuntimeException(
+                    "Impressora da cozinha não configurada."
+            );
+        }
+
         StringBuilder comando =
                 new StringBuilder();
 
-        /*
-         * ================================
-         * INICIALIZA A IMPRESSORA
-         * ================================
-         */
+        // Inicializa a impressora
         comando.append("\u001B\u0040");
 
-        /*
-         * ================================
-         * FONTE PADRÃO MAIOR
-         *
-         * GS ! 0x01
-         * Aumenta a altura da fonte.
-         * ================================
-         */
+        // Fonte padrão maior
         comando.append("\u001D\u0021\u0001");
 
-        /*
-         * ================================
-         * CENTRALIZA
-         * ================================
-         */
+        // Centraliza
         comando.append("\u001B\u0061\u0001");
-
-        /*
-         * ================================
-         * CABEÇALHO
-         * ================================
-         */
 
         // Negrito ligado
         comando.append("\u001B\u0045\u0001");
@@ -66,18 +58,8 @@ public class ImpressoraComanda {
         // Negrito desligado
         comando.append("\u001B\u0045\u0000");
 
-        /*
-         * ================================
-         * ALINHAMENTO À ESQUERDA
-         * ================================
-         */
+        // Alinhamento à esquerda
         comando.append("\u001B\u0061\u0000");
-
-        /*
-         * ================================
-         * DADOS DO PEDIDO
-         * ================================
-         */
 
         // Pedido em destaque
         comando.append("\u001B\u0045\u0001");
@@ -101,26 +83,12 @@ public class ImpressoraComanda {
 
         comando.append("--------------------------------\n");
 
-        /*
-         * ================================
-         * ITENS
-         * ================================
-         */
-
         comando.append(itens);
 
         comando.append("--------------------------------\n");
 
-        /*
-         * ================================
-         * TOTAL
-         * ================================
-         */
-
-        // Negrito
+        // Total
         comando.append("\u001B\u0045\u0001");
-
-        // Fonte 2x
         comando.append("\u001D\u0021\u0011");
 
         comando.append(String.format(
@@ -128,64 +96,35 @@ public class ImpressoraComanda {
                 total
         ));
 
-        // Volta para fonte normal ampliada
         comando.append("\u001D\u0021\u0001");
 
         comando.append("\n");
 
-        /*
-         * ================================
-         * STATUS
-         * ================================
-         */
-
+        // Status
         comando.append("\u001B\u0061\u0001");
-
         comando.append("================================\n");
-
         comando.append("\u001D\u0021\u0001");
-
         comando.append("PEDIDO FINALIZADO\n");
-
         comando.append("\u001B\u0045\u0000");
 
-        /*
-         * ================================
-         * AVANÇA O PAPEL
-         * ================================
-         */
-
+        // Avança papel
         comando.append("\n");
         comando.append("\n");
         comando.append("\n");
         comando.append("\n");
 
-        /*
-         * ================================
-         * CORTE DE PAPEL
-         * ================================
-         */
+        // Corte
         comando.append("\u001D\u0056\u0000");
 
-        /*
-         * ================================
-         * CONVERTE PARA BYTES
-         * ================================
-         */
         byte[] dados =
                 comando.toString()
                         .getBytes(StandardCharsets.UTF_8);
 
-        /*
-         * ================================
-         * ENVIA PARA O CUPS
-         * ================================
-         */
         Process processo =
                 new ProcessBuilder(
                         "lp",
                         "-d",
-                        IMPRESSORA
+                        impressora
                 ).start();
 
         try (OutputStream entrada =
@@ -195,18 +134,14 @@ public class ImpressoraComanda {
             entrada.flush();
         }
 
-        /*
-         * ================================
-         * AGUARDA O CUPS
-         * ================================
-         */
         int resultado =
                 processo.waitFor();
 
         if (resultado != 0) {
 
             throw new RuntimeException(
-                    "Erro ao enviar a comanda para a impressora."
+                    "Erro ao enviar a comanda para a impressora: "
+                            + impressora
             );
         }
     }
