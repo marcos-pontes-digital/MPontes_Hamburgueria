@@ -18,8 +18,17 @@ public class PedidoDAO {
 
         String sql = """
             INSERT INTO pedidos
-            (data_hora, cliente, tipo, status, total)
-            VALUES (?, ?, ?, ?, ?)
+            (
+                data_hora,
+                cliente,
+                tipo,
+                status,
+                total,
+                mesa,
+                atendente,
+                terminal
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         try (Connection conexao = Database.conectar();
@@ -34,6 +43,10 @@ public class PedidoDAO {
             stmt.setString(3, pedido.getTipo());
             stmt.setString(4, pedido.getStatus());
             stmt.setDouble(5, pedido.getTotal());
+
+            stmt.setString(6, pedido.getMesa());
+            stmt.setString(7, pedido.getAtendente());
+            stmt.setString(8, pedido.getTerminal());
 
             stmt.executeUpdate();
 

@@ -1,6 +1,7 @@
 package br.com.mpontes.hamburgueria.view;
 
 import br.com.mpontes.hamburgueria.dao.ItemPedidoDAO;
+import br.com.mpontes.hamburgueria.dao.ConfiguracaoDAO;
 import br.com.mpontes.hamburgueria.dao.PedidoDAO;
 import br.com.mpontes.hamburgueria.dao.ProdutoDAO;
 import br.com.mpontes.hamburgueria.model.ItemPedido;
@@ -174,8 +175,7 @@ public class TelaPedidos extends JFrame {
 
         scroll.setBorder(
                 BorderFactory.createTitledBorder(
-                        "Itens do Pedido"
-                )
+                        "Itens do Pedido" )
         );
 
         painelPrincipal.add(
@@ -376,6 +376,18 @@ public class TelaPedidos extends JFrame {
 
         String tipo =
                 comboTipo.getSelectedItem().toString();
+ConfiguracaoDAO configuracaoDAO =
+        new ConfiguracaoDAO();
+
+String terminal = 
+        configuracaoDAO.buscar("terminal.caixa");
+
+
+
+if (terminal == null || terminal.isBlank()) {
+    terminal = "CAIXA-01";
+}
+
 
         int resposta = JOptionPane.showConfirmDialog(
                 this,
@@ -413,13 +425,11 @@ public class TelaPedidos extends JFrame {
                     tipo,
                     "ABERTO",
                     total
-            );
+            ); pedido.setTerminal(terminal);
 
-            PedidoDAO pedidoDAO =
-                    new PedidoDAO();
+PedidoDAO pedidoDAO = new PedidoDAO();
 
-            int pedidoId =
-                    pedidoDAO.cadastrar(pedido);
+            int pedidoId = pedidoDAO.cadastrar(pedido);
 
             if (pedidoId == -1) {
 

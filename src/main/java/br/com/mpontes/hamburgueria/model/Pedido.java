@@ -9,6 +9,10 @@ public class Pedido {
     private String status;
     private double total;
 
+    private String mesa;
+    private String atendente;
+    private String terminal;
+
     public Pedido(String dataHora,
                   String cliente,
                   String tipo,
@@ -68,5 +72,29 @@ public class Pedido {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public String getMesa() {
+        return mesa;
+    }
+
+    public void setMesa(String mesa) {
+        this.mesa = mesa;
+    }
+
+    public String getAtendente() {
+        return atendente;
+    }
+
+    public void setAtendente(String atendente) {
+        this.atendente = atendente;
+    }
+
+    public String getTerminal() {
+        return terminal;
+    }
+
+    public void setTerminal(String terminal) {
+        this.terminal = terminal;
     }
 }
