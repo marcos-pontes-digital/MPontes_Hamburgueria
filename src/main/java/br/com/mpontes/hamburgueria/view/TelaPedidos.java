@@ -29,6 +29,8 @@ public class TelaPedidos extends JFrame {
     private JLabel lblTotal;
 
     private double total = 0.0;
+    private JTextField txtMesa;
+    private JTextField txtAtendente;
 
     public TelaPedidos() {
 
@@ -68,7 +70,7 @@ public class TelaPedidos extends JFrame {
         );
 
         JPanel painelDados = new JPanel(
-                new GridLayout(2, 4, 10, 10)
+                new GridLayout(3, 4, 10, 10)
         );
 
         painelDados.setBorder(
@@ -97,7 +99,23 @@ public class TelaPedidos extends JFrame {
                 }
         );
 
-        painelDados.add(comboTipo);
+                painelDados.add(comboTipo);
+
+        painelDados.add(
+                new JLabel("Mesa:")
+        );
+
+        txtMesa = new JTextField();
+
+        painelDados.add(txtMesa);
+
+        painelDados.add(
+                new JLabel("Atendente:")
+        );
+
+        txtAtendente = new JTextField();
+
+        painelDados.add(txtAtendente);
 
         painelDados.add(
                 new JLabel("Produto:")
@@ -113,7 +131,7 @@ public class TelaPedidos extends JFrame {
 
         JPanel painelQuantidade = new JPanel(
                 new BorderLayout(5, 5)
-        );
+  );
 
         spinnerQuantidade = new JSpinner(
                 new SpinnerNumberModel(
@@ -425,7 +443,16 @@ if (terminal == null || terminal.isBlank()) {
                     tipo,
                     "ABERTO",
                     total
-            ); pedido.setTerminal(terminal);
+            );
+String mesa =
+        txtMesa.getText().trim();
+
+String atendente =
+        txtAtendente.getText().trim();
+
+pedido.setMesa(mesa); pedido.setAtendente(atendente); 
+
+ pedido.setTerminal(terminal);
 
 PedidoDAO pedidoDAO = new PedidoDAO();
 
